@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Metrics;
 using System.IO;
@@ -7,14 +8,17 @@ using DATABASINLÄMNING.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 
+
 namespace DATABASINLÄMNING
 {
     internal class Program
     {
+
         static async Task Main(string[] args)
         {
             Console.WriteLine("DB: " + Path.Combine(AppContext.BaseDirectory, "shop.db"));
 
+            // Adds start data for categories, customers, orders and products if the database tables are empty.
             using (var db = new ShopContext())
             {
                 await db.Database.MigrateAsync();
@@ -34,9 +38,9 @@ namespace DATABASINLÄMNING
                 if (!await db.Customers.AnyAsync())
                 {
                     db.Customers.AddRange(
-                        new Customer { CustomerName = "Israa Tarabeih", Email = "Israa123@hotmail.com", City = "Västervik" },
-                        new Customer { CustomerName = "Anna Andersson", Email = "AnnaA@hotmail.com", City = "Stockholm" },
-                        new Customer { CustomerName = "Arvid Castello", Email = "Arvid@gmail.com", City = "London" }
+                        new Customer { CustomerName = "Israa Tarabeih", Email = Encrypt ("Israa@hotmail.com"), City = "Västervik" },
+                        new Customer { CustomerName = "Anna Andersson", Email = Encrypt ("AnnaA@gmail.com"), City = "Stockholm" },
+                        new Customer { CustomerName = "Arvid Castello", Email = Encrypt ("Arvid@gmail.com"), City = "London" }
                     );
 
                     await db.SaveChangesAsync();
@@ -79,17 +83,16 @@ namespace DATABASINLÄMNING
                     Console.WriteLine("Products seeded to DB");
                 }
 
+                // Shows the main menu and routes the user to their selected option.
+                // The menu continues to run until the user selects Exit.
                 while (true)
                 {
-                    // Huvudmeny
+                    Console.Clear();
+
                     Console.WriteLine("\n----Welcome to shop----");
                     Console.WriteLine("\nPick an option: 1 - Categories | 2 - Customers | 3 - Orders | 4 - Products | 5 - Exit ");
                     Console.WriteLine("Your choice: ");
                     string input = Console.ReadLine()?.Trim() ?? string.Empty;
-
-                    /* var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries); // Gör att användaren kan mata in flera svar samtidigt, behövs inte i detta fall? 
-                     var cmd = parts[0].ToLowerInvariant(); // Gör att det inte spelar någon roll om användaren skriver med små eller stora bokstäver. Behövs inte? 
-                    Speciellt inte nu när jag skrivit om edit och delete, test kör.*/
 
                     switch (input)
                     {
@@ -112,11 +115,12 @@ namespace DATABASINLÄMNING
                             Console.WriteLine("Please enter a valid option.");
                             break;
                     }
-
                 }
 
-                // Metoder för menyval 
-                // CRUD-flöde för Categories, Customers, Orders, Products
+                ///<summary>
+                /// Shows the category menu and routes the user to their selected CRUD option.
+                /// The menu keeps running until the user returns to the main menu.
+                /// </summary>
                 static async Task CategoryMenuAsync()
                 {
                     using var db = new ShopContext();
@@ -169,6 +173,10 @@ namespace DATABASINLÄMNING
                     }
                 }
 
+                ///<summary>
+                /// Shows the customer menu and routes the user to their selected CRUD option.
+                /// The menu keeps running until the user returns to the main menu.
+                /// </summary>
                 static async Task CustomerMenuAsync()
                 {
                     using var db = new ShopContext();
@@ -222,6 +230,10 @@ namespace DATABASINLÄMNING
                     }
                 }
 
+                ///<summary>
+                /// Shows the order menu and routes the user to their selected CRUD option.
+                /// The menu keeps running until the user returns to the main menu.
+                /// </summary>
                 static async Task OrderMenuAsync()
                 {
                     using var db = new ShopContext();
@@ -276,6 +288,10 @@ namespace DATABASINLÄMNING
                     }
                 }
 
+                ///<summary>
+                /// Shows the product menu and routes the user to their selected CRUD option.
+                /// The menu keeps running until the user returns to the main menu.
+                /// </summary>
                 static async Task ProductMenuAsync()
                 {
                     using var db = new ShopContext();
@@ -329,9 +345,9 @@ namespace DATABASINLÄMNING
                     }
                 }
 
-                // Efter huvudmenyn klickar man sig in på dessa beroende på vad man väljer.
-
-                // Metoder för att visa/lägga till/redigera/ta bort Categories
+                ///<summary>
+                /// Reads all categories from the database and prints them in a list. 
+                /// </summary>
                 static async Task ListCategoriesAsync()
                 {
                     using var db = new ShopContext();
@@ -341,6 +357,7 @@ namespace DATABASINLÄMNING
                         .OrderBy(g => g.CategoryId)
                         .ToListAsync();
 
+                    Console.WriteLine("----Categories----");
                     Console.WriteLine(" ID | Name | Description ");
                     foreach (var category in categories)
                     {
@@ -348,6 +365,9 @@ namespace DATABASINLÄMNING
                     }
                 }
 
+                ///<summary>
+                /// Method for adding a new category based on users input.
+                /// </summary>
                 static async Task AddCategoryAsync()
                 {
                     using var db = new ShopContext();
@@ -387,6 +407,10 @@ namespace DATABASINLÄMNING
                     }
                 }
 
+                ///<summary>
+                /// Method for updating an aldready existing category by id.
+                /// Allows the user to change the category name and description.
+                /// </summary>
                 static async Task EditCategoryAsync(int editId)
                 {
                     using var db = new ShopContext();
@@ -441,6 +465,9 @@ namespace DATABASINLÄMNING
                     }
                 }
 
+                ///<summary>
+                /// Deletes a category by id after checking that it exists.
+                /// </summary>
                 static async Task DeleteCategoryAsync(int deleteId)
                 {
                     using var db = new ShopContext();
@@ -465,7 +492,9 @@ namespace DATABASINLÄMNING
                     }
                 }
 
-                // Metoder för att visa/lägga till/redigera/ta bort Customers
+                ///<summary>
+                /// Reads all customers from the database and prints them in a list. 
+                /// </summary>
                 static async Task ListCustomersAsync()
                 {
                     using var db = new ShopContext();
@@ -475,13 +504,20 @@ namespace DATABASINLÄMNING
                         .OrderBy(c => c.CustomerId)
                         .ToListAsync();
 
+                    Console.WriteLine("----Customers----");
                     Console.WriteLine(" ID | Name | Email | City ");
                     foreach (var customer in customers)
                     {
-                        Console.WriteLine($" {customer.CustomerId} | {customer.CustomerName} | {customer.Email} | {customer.City} ");
+                        // Decrypts the email before displaying it to the user
+                        var decryptedEmail = Decrypt(customer.Email);
+                        Console.WriteLine($" {customer.CustomerId} | {customer.CustomerName} | {decryptedEmail} | {customer.City} ");
                     }
                 }
 
+                ///<summary>
+                /// Method for adding a new customer based on users input after validating name and email.
+                /// Also checks that the email adress is unique.
+                /// </summary>
                 static async Task AddCustomerAsync()
                 {
                     using var db = new ShopContext();
@@ -504,26 +540,29 @@ namespace DATABASINLÄMNING
                         return;
                     }
 
+                    // Encrypt the email before saving it to the database
+                    var encryptedEmail = Encrypt(mail);
+
                     Console.Write("City: ");
                     var city = Console.ReadLine()?.Trim() ?? string.Empty;
-                    
-                    if (string.IsNullOrEmpty(mail) ||  city.Length > 100)
+
+                    if (string.IsNullOrEmpty(mail) || city.Length > 100)
                     {
                         Console.WriteLine("City is required and must be less than 100 characters.");
                         return;
                     }
 
-                    var emailExists = await db.Customers.AnyAsync(c => c.Email == mail);
+                    var emailExists = await db.Customers.AnyAsync(c => c.Email == encryptedEmail);
                     if (emailExists)
                     {
-                        Console.WriteLine("A customer with this email already exists. Please choose a diffrent email.");
+                        Console.WriteLine("A customer with this email already exists. Please try a different email.");
                         return;
                     }
 
                     db.Customers.Add(new Customer
                     {
                         CustomerName = name,
-                        Email = mail,
+                        Email = encryptedEmail,
                         City = city
                     });
 
@@ -536,9 +575,12 @@ namespace DATABASINLÄMNING
                     {
                         Console.WriteLine("DB Error: " + exception.GetBaseException().Message);
                     }
-
                 }
 
+                ///<summary>
+                /// Updates an existing customer by id.
+                /// Allows the user to change name and email with basic validation.
+                /// </summary>
                 static async Task EditCustomerAsync(int editId)
                 {
                     using var db = new ShopContext();
@@ -552,7 +594,8 @@ namespace DATABASINLÄMNING
 
                     Console.WriteLine($"Editing customer: {customer.CustomerId}");
                     Console.WriteLine($"Current name: {customer.CustomerName}");
-                    Console.WriteLine($"Current email: {customer.Email}");
+                    var currentEmail = Decrypt(customer.Email);
+                    Console.WriteLine($"Current email: {currentEmail}");
                     Console.WriteLine($"Current city: {customer.City}");
 
                     Console.Write($"New customer name (Press enter to keep current): ");
@@ -580,15 +623,18 @@ namespace DATABASINLÄMNING
                             return;
                         }
 
+                        // Encrypt the new email before checking and saving it.
+                        var encryptedMail = Encrypt(mail);
+
                         var emailTaken = await db.Customers
-                            .AnyAsync(c => c.Email == mail && c.CustomerId != editId);
+                            .AnyAsync(c => c.Email == encryptedMail && c.CustomerId != editId);
                         if (emailTaken)
                         {
                             Console.WriteLine("This email is already taken, try another.");
                             return;
                         }
 
-                        customer.Email = mail;
+                        customer.Email = encryptedMail;
                     }
 
                     Console.Write($"New city (Press enter to keep current): ");
@@ -614,9 +660,11 @@ namespace DATABASINLÄMNING
                     {
                         Console.WriteLine("DB Error: " + exception.GetBaseException().Message);
                     }
-
                 }
 
+                ///<summary>
+                /// Deletes a customer by id after checking that it exists.
+                /// </summary>
                 static async Task DeleteCustomerAsync(int deleteId)
                 {
                     using var db = new ShopContext();
@@ -640,7 +688,9 @@ namespace DATABASINLÄMNING
                     }
                 }
 
-                // Metoder för att visa/lägga till/redigera/ta bort Orders
+                ///<summary>
+                /// Reads all orders from the database and prints them i a list with customer, date and status.
+                /// </summary>
                 static async Task ListOrdersAsync()
                 {
                     using var db = new ShopContext();
@@ -651,6 +701,7 @@ namespace DATABASINLÄMNING
                         .OrderBy(o => o.OrderId)
                         .ToListAsync();
 
+                    Console.WriteLine("----Orders----");
                     Console.WriteLine(" OrderID | Customer | OrderDate | Status ");
                     foreach (var order in orders)
                     {
@@ -658,6 +709,11 @@ namespace DATABASINLÄMNING
                     }
                 }
 
+                ///<summary>
+                /// Creates a new order for a selected customer.
+                /// Lets the user add one or more order rows with product and quantity,
+                /// and saves the order with the status set to "Pending".
+                /// </summary>
                 static async Task AddOrderAsync()
                 {
                     using var db = new ShopContext();
@@ -676,11 +732,13 @@ namespace DATABASINLÄMNING
                     Console.WriteLine(" ID | Name | Email ");
                     foreach (var customer in customers)
                     {
-                        Console.WriteLine($" {customer.CustomerId} | {customer.CustomerName} | {customer.Email} ");
+                        // Decrypts the email before displaying it to the user.
+                        var decryptedEmail = Decrypt(customer.Email);
+                        Console.WriteLine($" {customer.CustomerId} | {customer.CustomerName} | {decryptedEmail} ");
                     }
 
                     Console.Write("Please enter customer id: ");
-                    if (!int.TryParse(Console.ReadLine(), out var customerId) || 
+                    if (!int.TryParse(Console.ReadLine(), out var customerId) ||
                         !customers.Any(c => c.CustomerId == customerId))
                     {
                         Console.WriteLine("Invalid input of customer id");
@@ -731,7 +789,7 @@ namespace DATABASINLÄMNING
                         }
 
                         Console.Write("Enter quantity: ");
-                        if (!int.TryParse(Console.ReadLine(),out var quantity) || quantity <= 0)
+                        if (!int.TryParse(Console.ReadLine(), out var quantity) || quantity <= 0)
                         {
                             Console.WriteLine("Invalid input");
                             continue;
@@ -774,6 +832,10 @@ namespace DATABASINLÄMNING
                     }
                 }
 
+                ///<summary>
+                /// Updates an existing order by id.
+                /// Allows the user to change customer, order date and status with validation.
+                /// </summary>
                 static async Task EditOrderAsync(int editId)
                 {
                     using var db = new ShopContext();
@@ -850,6 +912,9 @@ namespace DATABASINLÄMNING
                     }
                 }
 
+                ///<summary>
+                /// Deletes an order by id after checking that it exists. 
+                /// </summary>
                 static async Task DeleteOrderAsync(int deleteId)
                 {
                     using var db = new ShopContext();
@@ -874,23 +939,31 @@ namespace DATABASINLÄMNING
                     }
                 }
 
-                // Metoder för att visa/lägga till/redigera/ta bort Products
+                ///<summary>
+                /// Reads all products from the database and prints their ID, name, price and what category they belong in.
+                /// </summary>
                 static async Task ListProductsAsync()
                 {
                     using var db = new ShopContext();
 
                     var products = await db.Products
+                        .Include(p => p.Category)
                         .AsNoTracking()
                         .OrderBy(p => p.ProductId)
                         .ToListAsync();
 
-                    Console.WriteLine(" ID | Name | Price ");
+                    Console.WriteLine("----Products----");
+                    Console.WriteLine(" ID | Name | Price | Category");
                     foreach (var product in products)
                     {
-                        Console.WriteLine($" {product.ProductId} | {product.ProductName} | {product.Price} ");
+                        Console.WriteLine($" {product.ProductId} | {product.ProductName} | {product.Price} | {product.Category?.CategoryName} ");
                     }
                 }
 
+                ///<summary>
+                /// Adds a new product with name, price and category. 
+                /// Based on users input, with basic validation.
+                /// </summary>
                 static async Task AddProductAsync()
                 {
                     using var db = new ShopContext();
@@ -916,7 +989,7 @@ namespace DATABASINLÄMNING
                     Console.Write("Please enter category id: ");
                     var categoryInput = Console.ReadLine()?.Trim() ?? string.Empty;
 
-                    if (!int.TryParse(categoryInput, out var categoryId) || 
+                    if (!int.TryParse(categoryInput, out var categoryId) ||
                         !categories.Any(c => c.CategoryId == categoryId))
                     {
                         Console.WriteLine("Invalid category id");
@@ -964,6 +1037,10 @@ namespace DATABASINLÄMNING
                     }
                 }
 
+                ///<summary>
+                /// Updates an existing product by id.
+                /// Lets the user change name, price and category if the input is valid.
+                /// </summary>
                 static async Task EditProductAsync(int editId)
                 {
                     using var db = new ShopContext();
@@ -1041,9 +1118,11 @@ namespace DATABASINLÄMNING
                     {
                         Console.WriteLine("DB Error: " + exception.GetBaseException().Message);
                     }
-
                 }
 
+                ///<summary>
+                /// Delets a product by id after checking that it exists.
+                /// </summary>
                 static async Task DeleteProductAsync(int deleteId)
                 {
                     using var db = new ShopContext();
@@ -1067,6 +1146,56 @@ namespace DATABASINLÄMNING
                         Console.WriteLine("DB Error: " + exception.GetBaseException().Message);
                     }
                 }
+            }
+        }
+
+        // My key for XOR encryption/decryption.
+        private const byte Key = 0x42;
+
+        /// <summary>
+        /// Encrypts a plain text email using XOR.
+        /// Returns the encrypted email as a base64 string.
+        /// </summary>
+        public static string Encrypt(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return input;
+            }
+
+            var bytes = Encoding.UTF8.GetBytes(input);
+
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                bytes[i] = (byte)(bytes[i] ^ Key);
+            }
+            return Convert.ToBase64String(bytes);
+        }
+
+        /// <summary>
+        /// Decrypts an email that was previously encrypted using the XOR method.
+        /// Returns the original readable email string..
+        /// </summary>
+        public static string Decrypt(string encryptedInput)
+        {
+            if (string.IsNullOrEmpty(encryptedInput))
+            {
+                return encryptedInput;
+            }
+
+            try
+            {
+                var bytes = Convert.FromBase64String(encryptedInput);
+
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    bytes[i] = (byte)(bytes[i] ^ Key);
+                }
+                return Encoding.UTF8.GetString(bytes);
+            }
+            catch (FormatException)
+            {
+                return encryptedInput;
             }
         }
     }

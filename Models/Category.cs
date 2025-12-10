@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 
 namespace DATABASINLÄMNING.Models
 {
+    /// <summary>
+    /// Represents a product category with a name and description.
+    /// Each category can contain multiple products.
+    /// </summary>
     public class Category
     {
         // PK
@@ -18,7 +22,7 @@ namespace DATABASINLÄMNING.Models
         [Required, MaxLength(100)]
         public string CategoryDescription { get; set; } = string.Empty;
 
-        // Navigation - en Category kan ha flera Products.  
+        // Navigation - a category can have many products. 
         public List<Product> Products { get; set; } = new();
     }
 }
