@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 
 namespace DATABASINLÄMNING.Models
 {
+    /// <summary>
+    /// Represents a customer in the system, including name, email and city.
+    /// Each customer can have multiple orders.
+    /// </summary>
     public class Customer
     {
         // PK
@@ -21,7 +25,7 @@ namespace DATABASINLÄMNING.Models
         [MaxLength(100)]
         public string City { get; set; } = string.Empty;
 
-        // Navigation - en Customer kan ha flera Orders.
+        // Navigation - a customer can have many orders.
         public List<Order> Orders { get; set; } = new();
     }
 }

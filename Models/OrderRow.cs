@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 
 namespace DATABASINLÄMNING.Models
 {
+    /// <summary>
+    /// Represents a single row in an order, containing product, quantity and unit price. 
+    /// Each order row belongs to one order and one product.
+    /// </summary>
     public class OrderRow
     {
         // PK
@@ -24,10 +28,10 @@ namespace DATABASINLÄMNING.Models
         [Required]
         public decimal UnitPrice { get; set; }
 
-        // Navigation - referens till Order-objektet denna OrderRow tillhör.
+        // Navigation - reference to the order this row belongs to.
         public Order? Order { get; set; }
 
-        // Navigation - referens till Product-objektet för denna OrderRow.
+        // Navigation - reference to the product in this row.
         public Product? Product { get; set; }
     }
 }
